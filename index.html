@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800&display=swap" rel="stylesheet">
+    <title>Reprobate's</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .example-container {
+            overflow: hidden;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* --- Premium Start Screen --- */
+        #start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 10, 15, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            flex-direction: column;
+            gap: 20px;
+            transition: opacity 0.6s ease;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 85%;
+            max-width: 340px;
+            text-align: center;
+        }
+
+        .input-group h2 {
+            color: white;
+            margin: 0 0 10px 0;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 800;
+            font-size: 32px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .input-group p {
+            color: rgba(255, 255, 255, 0.7);
+            margin: 0 0 15px 0;
+            font-size: 14px;
+        }
+
+        #email-input {
+            padding: 16px 20px;
+            font-size: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        #email-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        #email-input:focus {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: #161083;
+            box-shadow: 0 0 25px rgba(22, 16, 131, 0.4);
+        }
+
+        #email-input.error {
+            border-color: #ff4444;
+            box-shadow: 0 0 20px rgba(255, 68, 68, 0.2);
+        }
+
+        #start-button {
+            padding: 18px;
+            font-size: 16px;
+            /* New User Color Theme */
+            background: linear-gradient(135deg, #161083 0%, #0e0a5c 100%);
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            color: white;
+            /* Changed to white text */
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
+            /* Professional Static Glow */
+            box-shadow: 0 0 20px rgba(22, 16, 131, 0.6), 0 0 40px rgba(22, 16, 131, 0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #start-button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            filter: grayscale(0.5);
+        }
+
+        #start-button:active:not(:disabled) {
+            transform: scale(0.97);
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Hide A-Frame VR/AR Buttons */
+        .a-enter-vr-button,
+        .a-enter-ar-button {
+            display: none !important;
+        }
+
+        /* --- Scanning Overlay --- */
+        #scanning-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+            display: none;
+            /* Hidden until email submitted */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .scan-guide {
+            position: relative;
+            width: 70vw;
+            height: 70vw;
+            max-width: 400px;
+            max-height: 400px;
+            /* Border and shadow removed */
+            /* border: 2px solid rgba(255, 255, 255, 0.3); */
+            /* box-shadow: 0 0 0 2000px rgba(0, 0, 0, 0.5); */
+            display: none;
+            /* Hide completely as requested */
+        }
+
+        /* Reticle Corners - Hidden
+        .scan-guide::before,
+        .scan-guide::after,
+        .scan-guide .corners::before,
+        .scan-guide .corners::after {
+            content: '';
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border: 4px solid white;
+            transition: all 0.3s ease;
+        } 
+        ... and other corner styles ...
+        */
+
+
+        /* Scanning Text */
+        .scan-text {
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            font-size: 16px;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 12px 24px;
+            border-radius: 30px;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            letter-spacing: 0.5px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            max-width: 90%;
+            display: block;
+            margin-top: 20px;
+            transform: translateY(25px);
+            /* Move text down more */
+        }
+
+        /* Move text further down on bigger screens */
+        @media (min-width: 768px) {
+            .scan-text {
+                transform: translateY(80px);
+            }
+        }
+
+        /* Target Found State */
+        .scan-guide.found {
+            border-color: #00ff88;
+            box-shadow: 0 0 0 2000px rgba(0, 0, 0, 0.1);
+            /* Clear up the view */
+            transform: scale(1.05);
+        }
+
+        .scan-guide.found::before,
+        .scan-guide.found::after,
+        .scan-guide.found .corners::before,
+        .scan-guide.found .corners::after {
+            border-color: #00ff88;
+        }
+
+        /* --- Toast Notification --- */
+        #toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: white;
+            color: #111;
+            padding: 12px 24px;
+            border-radius: 50px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 1000;
+        }
+
+        #toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        #toast.success {
+            border-left: 4px solid #161083;
+        }
+
+        #toast.error {
+            border-left: 4px solid #ff4444;
+        }
+
+        /* Target Preview Image */
+        .target-preview {
+            width: 56vmin;
+            /* Reduced by 20% */
+            max-width: 240px;
+            border-radius: 12px;
+            opacity: 0.35;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            margin-bottom: 20px;
+            margin-top: 8.5vh;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .target-preview.hidden {
+            display: none;
+        }
+
+        /* --- Responsive Queries --- */
+
+        /* Small Mobile Phones */
+        @media (max-width: 480px) {
+            .input-group h2 {
+                font-size: 24px;
+                /* Smaller heading */
+            }
+
+            .input-group p {
+                font-size: 13px;
+            }
+
+            #start-button {
+                padding: 15px;
+            }
+        }
+
+        /* Landscape Mode or Short Screens */
+        @media (max-height: 600px) {
+            .input-group {
+                gap: 12px;
+            }
+
+            .input-group h2 {
+                margin-bottom: 2px;
+                font-size: 20px;
+            }
+
+            .target-preview {
+                margin-top: 10px;
+                max-width: 150px;
+                /* Smaller preview on short screens */
+            }
+
+            #scanning-overlay {
+                justify-content: center;
+                padding-top: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Start Screen Overlay -->
+    <div id="start-screen">
+        <div class="input-group">
+            <h2>REPROBATE'S AR EXPERIENCE</h2>
+            <p>Enter your email to unlock the content</p>
+            <input type="email" id="email-input" placeholder="name@example.com" required>
+            <button id="start-button">
+                <span class="btn-text">Unlock Experience</span>
+                <div class="spinner"></div>
+            </button>
+        </div>
+    </div>
+
+    <!-- Scanning Overlay -->
+    <div id="scanning-overlay">
+        <!-- Target Preview Image -->
+        <img src="./3S3QX6.png" class="target-preview" alt="Target to Scan">
+        <div class="scan-text" style="display: block; margin-top: 10px;">Scan this image to view content</div>
+
+        <div class="scan-guide" id="scan-guide">
+            <div class="corners"></div>
+        </div>
+        <!-- Hidden old text for finding logic references if any -->
+        <div class="scan-text" id="scan-text" style="display:none">Point camera at image target</div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast">Message here</div>
+
+    <!-- MAIN AR SCENE -->
+    <div class="example-container">
+        <!-- added missTolerance to reduce jitter -->
+        <a-scene
+            mindar-image="imageTargetSrc: ./targets%20(23).mind; filterMinCF:0.0001; filterBeta: 0.001; missTolerance: 20; warmupTolerance: 10"
+            color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false"
+            device-orientation-permission-ui="enabled: false">
+
+            <a-assets>
+                <video id="vid" src="./donaldjones.mp4" preload="auto" loop="true" crossOrigin="anonymous" playsinline
+                    webkit-playsinline></video>
+            </a-assets>
+
+            <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+            <!-- Wrap content in a parent entity for entry animation -->
+            <a-entity mindar-image-target="targetIndex: 0" id="target-entity">
+
+                <!-- This container will animate scale -->
+                <a-entity id="content-container" scale="0 0 0">
+                    <!-- Video Plane -->
+                    <a-plane position="0 0 0" height="2.34" width="1.32" rotation="0 0 0"
+                        material="shader: flat; src: #vid" class="clickable"></a-plane>
+
+                    <!-- Title Label (Professional 3D Shadow + Heartbeat Pulse Animation) -->
+                    <!-- Note: Animating scale creates a "heartbeat" zoom in/out effect. -->
+                    <a-entity position="0 1.17 0.05"
+                        animation="property: scale; from: 1 1 1; to: 1.15 1.15 1; dir: alternate; dur: 1500; easing: easeInOutQuad; loop: true">
+                        <!-- Shadow Layer (Bluish, Offset for 3D look) -->
+                        <a-text value="REPROBATE'S RUM" align="center" color="#161083" width="3"
+                            position="0.03 -0.03 -0.01" opacity="0.8"
+                            font="https://raw.githubusercontent.com/etiennepinchon/aframe-fonts/master/fonts/poppins/Poppins-Bold.json"
+                            shader="msdf" wrap-count="20"></a-text>
+                        <!-- Main Text (White) -->
+                        <a-text value="REPROBATE'S RUM" align="center" color="white" width="3" position="0 0 0"
+                            font="https://raw.githubusercontent.com/etiennepinchon/aframe-fonts/master/fonts/poppins/Poppins-Bold.json"
+                            shader="msdf" wrap-count="20"></a-text>
+                    </a-entity>
+
+                    <!-- Grounding Shadow -->
+                    <a-circle position="0 -1.1 0" radius="0.6" rotation="-90 0 0" color="black" opacity="0.3"
+                        material="transparent: true; shader: flat">
+                    </a-circle>
+                </a-entity>
+
+            </a-entity>
+        </a-scene>
+    </div>
+
+    <script>
+        // --- UI LOGIC ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const startButton = document.getElementById('start-button'); // Button container
+            const btnText = startButton.querySelector('.btn-text');
+            const spinner = startButton.querySelector('.spinner');
+            const startScreen = document.getElementById('start-screen');
+            const emailInput = document.getElementById('email-input');
+            const overlay = document.getElementById('scanning-overlay');
+            const scanGuide = document.getElementById('scan-guide');
+            const scanText = document.getElementById('scan-text');
+            const toast = document.getElementById('toast');
+
+            const video = document.getElementById('vid');
+            const targetEntity = document.getElementById('target-entity');
+            const contentContainer = document.getElementById('content-container');
+
+            // Flag to prevent AR from running before unlock
+            let isAccessGranted = false;
+
+            // Helper: Show Toast
+            function showToast(msg, type = 'success') {
+                toast.textContent = msg;
+                toast.className = type + ' show';
+                setTimeout(() => {
+                    toast.className = '';
+                }, 3000);
+            }
+
+            // Ensure video paused
+            if (video) video.pause();
+
+            startButton.addEventListener('click', async () => {
+                const email = emailInput.value.trim();
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+                if (!emailRegex.test(email)) {
+                    emailInput.classList.add('error');
+                    emailInput.focus();
+                    showToast("Please enter a valid email", "error");
+                    return;
+                }
+                emailInput.classList.remove('error');
+
+                // Set Loading State
+                startButton.disabled = true;
+                btnText.textContent = "Connecting...";
+                spinner.style.display = "block";
+
+                // --- EMAIL SUBMISSION ---
+                const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzUxudhczyKGeEYwZCK1aiS1zAMMYW_qJznvzFGCwUowNgeNU3I05klx8UMAi0q8kne/exec';
+
+                let success = false;
+                try {
+                    const response = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'cors',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify({ email: email })
+                    });
+                    const text = await response.text();
+                    if (text.includes("Yes")) success = true;
+                } catch (e) {
+                    console.error(e);
+                    // Decide if we let them in anyway on error so we don't block the user (Fail Open)
+                    success = false;
+                }
+
+                // Reset Button
+                startButton.disabled = false;
+                spinner.style.display = "none";
+                btnText.textContent = "Unlock Experience";
+
+                if (success) {
+                    showToast("Welcome! Access Granted.");
+                    isAccessGranted = true; // Enable AR
+
+                    // Unlock Audio/Video Context
+                    if (video) {
+                        video.play().then(() => video.pause()).catch(e => { });
+                    }
+
+                    // Transition UI
+                    startScreen.style.opacity = '0';
+                    setTimeout(() => {
+                        startScreen.style.display = 'none';
+                        overlay.style.display = 'flex'; // Show scanning overlay
+                    }, 600);
+
+                } else {
+                    showToast("Access Denied. Please try again.", "error");
+                }
+            });
+
+            // --- AR EVENTS ---
+            if (targetEntity) {
+                targetEntity.addEventListener("targetFound", event => {
+                    // STRICT CHECK: Do not run AR if access is not granted
+                    if (!isAccessGranted) {
+                        console.log("Target found but access denied yet.");
+                        return;
+                    }
+
+                    console.log("Target Found");
+
+                    // Hide the scanning overlay (preview image + text) so view is clear
+                    overlay.style.display = 'none';
+
+                    // Note: We keep the old scanText reference for stability, but visuals are hidden/handled above
+                    // The user wanted scan box gone, so we don't show much here.
+
+                    // Play Video
+                    if (video) video.play();
+
+                    // Animate Content In (Manual JS Tween)
+                    let scale = { x: 0, y: 0, z: 0 };
+                    let currentScale = 0;
+
+                    // Cancel any previous frames if re-triggered rapidly
+                    if (window.animFrame) cancelAnimationFrame(window.animFrame);
+
+                    const animateIn = () => {
+                        const targetScale = 0.8; // Reduced size by 20%
+                        if (currentScale < targetScale) {
+                            // Ease out formula
+                            currentScale += (targetScale - currentScale) * 0.1;
+                            if (currentScale > (targetScale - 0.005)) currentScale = targetScale;
+
+                            contentContainer.setAttribute('scale', `${currentScale} ${currentScale} ${currentScale}`);
+
+                            if (currentScale < targetScale) {
+                                window.animFrame = requestAnimationFrame(animateIn);
+                            }
+                        }
+                    };
+                    window.animFrame = requestAnimationFrame(animateIn);
+                });
+
+                targetEntity.addEventListener("targetLost", event => {
+                    console.log("Target Lost");
+
+                    // Show the scanning overlay again so user knows what to look for
+                    // Check if we are past the start screen to avoid showing it prematurely (though targetLost usually happens after start)
+                    if (startScreen.style.display === 'none') {
+                        overlay.style.display = 'flex';
+                    }
+
+
+
+                    // Pause Video
+                    if (video) video.pause();
+
+                    // Reset Scale Immediate
+                    if (window.animFrame) cancelAnimationFrame(window.animFrame);
+                    contentContainer.setAttribute('scale', "0 0 0");
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>
