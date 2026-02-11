@@ -388,13 +388,13 @@
                 <!-- This container will animate scale -->
                 <a-entity id="content-container" scale="0 0 0">
                     <!-- Video Plane -->
-                    <a-plane position="0 0 0" height="2.34" width="1.32" rotation="0 0 0"
+                    <a-plane position="0 0 0" height="2.085" width="1.176" rotation="0 0 0"
                         material="shader: flat; src: #vid" class="clickable"></a-plane>
 
                     <!-- Title Label (Professional 3D Shadow + Heartbeat Pulse Animation) -->
                     <!-- Note: Animating scale creates a "heartbeat" zoom in/out effect. -->
-                    <a-entity position="0 1.17 0.05"
-                        animation="property: scale; from: 1 1 1; to: 1.15 1.15 1; dir: alternate; dur: 1500; easing: easeInOutQuad; loop: true">
+                    <a-entity position="0 1.043 0.05"
+                        animation="property: scale; from: 0.693 0.693 1; to: 0.798 0.798 1; dir: alternate; dur: 1500; easing: easeInOutQuad; loop: true">
                         <!-- Shadow Layer (Bluish, Offset for 3D look) -->
                         <a-text value="REPROBATE'S RUM" align="center" color="#161083" width="3"
                             position="0.03 -0.03 -0.01" opacity="0.8"
@@ -407,7 +407,7 @@
                     </a-entity>
 
                     <!-- Grounding Shadow -->
-                    <a-circle position="0 -1.1 0" radius="0.6" rotation="-90 0 0" color="black" opacity="0.3"
+                    <a-circle position="0 -0.97 0" radius="0.535" rotation="-90 0 0" color="black" opacity="0.3"
                         material="transparent: true; shader: flat">
                     </a-circle>
                 </a-entity>
